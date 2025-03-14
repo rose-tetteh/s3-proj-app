@@ -4,7 +4,7 @@ Description: 'VPC Infrastructure for Highly Available Containerized Web Applicat
 Parameters:
   ProjectName:
     Type: String
-    Default: s3app
+    Default: s3App
     Description: Name of the project
 
   VpcCIDR:
@@ -39,12 +39,12 @@ Parameters:
 
   ECRRepositoryName:
     Type: String
-    Default: s3app-repo
+    Default: s3App-repo
     Description: Name of the ECR repository
 
   S3BucketName:
     Type: String
-    Default: s3app-images
+    Default: s3App-images
     Description: Name of the S3 bucket for storing images
 
 Resources:
