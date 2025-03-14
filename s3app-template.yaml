@@ -270,44 +270,39 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-    # Public ECR Repository
-    ECRRepository:
-      Type: AWS::ECR::Repository
-      Properties:
-        RepositoryName: !Ref ECRRepositoryName
-        PublicAccessBlockConfiguration:
-          BlockPublicAcls: false
-          BlockPublicPolicy: false
-          IgnorePublicAcls: false
-          RestrictPublicBuckets: false
-        RepositoryPolicyText:
-          Version: '2012-10-17'
-          Statement:
-            - Sid: PublicReadAccess
-              Effect: Allow
-              Principal: '*'
-              Action:
-                - ecr:GetDownloadUrlForLayer
-                - ecr:BatchGetImage
-                - ecr:BatchCheckLayerAvailability
-        LifecyclePolicy:
-          LifecyclePolicyText: |
-            {
-              "rules": [
-                {
-                  "rulePriority": 1,
-                  "description": "Keep only the latest 10 images",
-                  "selection": {
-                    "tagStatus": "any",
-                    "countType": "imageCountMoreThan",
-                    "countNumber": 10
-                  },
-                  "action": {
-                    "type": "expire"
-                  }
+  # Public ECR Repository
+  ECRRepository:
+    Type: AWS::ECR::PublicRepository
+    Properties:
+      RepositoryName: !Ref ECRRepositoryName
+      RepositoryPolicyText:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: PublicReadAccess
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only the latest 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
                 }
-              ]
-            }
+              }
+            ]
+          }
 
 Outputs:
   VPC:
