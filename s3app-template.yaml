@@ -272,7 +272,7 @@ Resources:
 
   # Public ECR Repository
   ECRRepository:
-    Type: AWS::ECR::PublicRepository
+    Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref ECRRepositoryName
       RepositoryPolicyText:
