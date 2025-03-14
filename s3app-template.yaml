@@ -270,11 +270,21 @@ Resources:
       VersioningConfiguration:
         Status: Enabled
 
-  # ECR Repository
+  # Public ECR Repository
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties:
       RepositoryName: !Ref ECRRepositoryName
+      RepositoryPolicyText:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowPullAccess
+            Effect: Allow
+            Principal: '*'
+            Action:
+              - ecr:GetDownloadUrlForLayer
+              - ecr:BatchGetImage
+              - ecr:BatchCheckLayerAvailability
       LifecyclePolicy:
         LifecyclePolicyText: |
           {
@@ -293,45 +303,6 @@ Resources:
               }
             ]
           }
-
-  # ECS Cluster
-  ECSCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: !Sub ${ProjectName}-cluster
-      CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
-      DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE
-          Weight: 1
-
-  # IAM Roles
-  ECSTaskExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-
-  ECSTaskRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: ecs-tasks.amazonaws.com
-            Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonS3FullAccess
 
   # Load Balancer
   ApplicationLoadBalancer:
@@ -379,77 +350,69 @@ Resources:
       Port: 80
       Protocol: HTTP
 
-  # CloudWatch Log Group
-  CloudWatchLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /ecs/${ProjectName}
-      RetentionInDays: 30
+Outputs:
+  VPCID:
+    Description: The ID of the VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${ProjectName}-VPCID
 
-  # ECS Task Definition
-  TaskDefinition:
-    Type: AWS::ECS::TaskDefinition
-    Properties:
-      Family: !Sub ${ProjectName}-task
-      Cpu: '256'
-      Memory: '512'
-      NetworkMode: awsvpc
-      RequiresCompatibilities:
-        - FARGATE
-      ExecutionRoleArn: !GetAtt ECSTaskExecutionRole.Arn
-      TaskRoleArn: !GetAtt ECSTaskRole.Arn
-      ContainerDefinitions:
-        - Name: !Sub ${ProjectName}-container
-          Image: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest
-          Essential: true
-          PortMappings:
-            - ContainerPort: !Ref ContainerPort
-              HostPort: !Ref ContainerPort
-              Protocol: tcp
-          LogConfiguration:
-            LogDriver: awslogs
-            Options:
-              awslogs-group: !Ref CloudWatchLogGroup
-              awslogs-region: !Ref AWS::Region
-              awslogs-stream-prefix: ecs
-          Environment:
-            - Name: S3_BUCKET_NAME
-              Value: !Ref S3BucketName
+  PublicSubnet1ID:
+    Description: The ID of the first public subnet
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub ${ProjectName}-PublicSubnet1ID
 
-  # ECS Service
-  ECSService:
-    Type: AWS::ECS::Service
-    DependsOn: ALBListener
-    Properties:
-      ServiceName: !Sub ${ProjectName}-service
-      Cluster: !Ref ECSCluster
-      TaskDefinition: !Ref TaskDefinition
-      DesiredCount: 2
-      LaunchType: FARGATE
-      DeploymentController:
-        Type: CODE_DEPLOY
-      LoadBalancers:
-        - TargetGroupArn: !Ref TargetGroup
-          ContainerName: !Sub ${ProjectName}-container
-          ContainerPort: !Ref ContainerPort
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          AssignPublicIp: DISABLED
-          SecurityGroups:
-            - !Ref ECSSecurityGroup
-          Subnets:
-            - !Ref PrivateSubnet1
-            - !Ref PrivateSubnet2
+  PublicSubnet2ID:
+    Description: The ID of the second public subnet
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub ${ProjectName}-PublicSubnet2ID
 
-  # Auto Scaling
-  AutoScalingTarget:
-    Type: AWS::ApplicationAutoScaling::ScalableTarget
-    Properties:
-      MaxCapacity: 6
-      MinCapacity: 2
-      ResourceId: !Join
-        - /
-        - - service
-          - !Ref ECSCluster
-          - !GetAtt ECSService.Name
-      ScalableDimension: ecs:service:Desire
+  PrivateSubnet1ID:
+    Description: The ID of the first private subnet
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${ProjectName}-PrivateSubnet1ID
+
+  PrivateSubnet2ID:
+    Description: The ID of the second private subnet
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${ProjectName}-PrivateSubnet2ID
+
+  ALBSecurityGroupID:
+    Description: The ID of the ALB security group
+    Value: !Ref ALBSecurityGroup
+    Export:
+      Name: !Sub ${ProjectName}-ALBSecurityGroupID
+
+  ECSSecurityGroupID:
+    Description: The ID of the ECS security group
+    Value: !Ref ECSSecurityGroup
+    Export:
+      Name: !Sub ${ProjectName}-ECSSecurityGroupID
+
+  ECRRepositoryURI:
+    Description: The URI of the ECR repository
+    Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}
+    Export:
+      Name: !Sub ${ProjectName}-ECRRepositoryURI
+
+  S3BucketName:
+    Description: The name of the S3 bucket for images
+    Value: !Ref ImagesBucket
+    Export:
+      Name: !Sub ${ProjectName}-S3BucketName
+
+  TargetGroupARN:
+    Description: The ARN of the target group
+    Value: !Ref TargetGroup
+    Export:
+      Name: !Sub ${ProjectName}-TargetGroupARN
+
+  LoadBalancerDNS:
+    Description: The DNS name of the load balancer
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub ${ProjectName}-LoadBalancerDNS
