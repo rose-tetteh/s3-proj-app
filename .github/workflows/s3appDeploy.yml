@@ -29,7 +29,5 @@ jobs:
           docker build \
           --build-arg G_AWS_ACCESS_KEY=${{ secrets.G_AWS_ACCESS_KEY }} \
           --build-arg G_AWS_SECRET_KEY=${{ secrets.G_AWS_SECRET_KEY }} \
-          --build-arg G_AWS_REGION=${{ secrets.G_AWS_REGION }} \
-          --build-arg G_AWS_BUCKET_NAME=${{ secrets.G_AWS_BUCKET_NAME }} \
           -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
