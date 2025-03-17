@@ -1,26 +1,30 @@
-#Build Stage
+# Build Stage
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn clean package -DskipTests
 
-#Run stage
-FROM maven:3.9.6-eclipse-temurin-21
+# Run stage
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/s3-proj-app-*.jar /app/s3-proj-app.jar
 EXPOSE 8080
 
-# Accept build arguments (names coming from GitHub secrets)
-ARG G_AWS_ACCESS_KEY
-ARG G_AWS_SECRET_KEY
-ARG G_AWS_REGION
-ARG G_AWS_BUCKET_NAME
+# Create AWS credentials directory
+RUN mkdir -p /root/.aws
 
-# Map the build arguments to the environment variables expected by your application
-ENV AWS_ACCESS_KEY=${G_AWS_ACCESS_KEY}
-ENV AWS_SECRET_KEY=${G_AWS_SECRET_KEY}
-ENV AWS_REGION=${G_AWS_REGION}
-ENV AWS_BUCKET_NAME=${G_AWS_BUCKET_NAME}
+# Create AWS credentials file
+RUN echo "[default]" > /root/.aws/credentials \
+    && echo "aws_access_key_id=${G_AWS_ACCESS_KEY}" >> /root/.aws/credentials \
+    && echo "aws_secret_access_key=${G_AWS_SECRET_KEY}" >> /root/.aws/credentials
+
+# Create AWS config file (optional, but prevents the previous error)
+RUN echo "[default]" > /root/.aws/config \
+    && echo "region=us-east-1" >> /root/.aws/config
+
+# Ensure correct permissions
+RUN chmod 600 /root/.aws/credentials
+RUN chmod 600 /root/.aws/config
 
 ENTRYPOINT ["java", "-jar", "s3-proj-app.jar"]
