@@ -12,6 +12,11 @@ Parameters:
     Default: 8080
     Description: Port on which the container will listen
 
+  ECRRepositoryName:
+    Type: String
+    Default: s3appl-repo
+    Description: Name of the ECR repository
+
 Resources:
   # IAM Roles
   ECSTaskExecutionRole:
