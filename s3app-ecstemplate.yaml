@@ -120,8 +120,11 @@ Resources:
       TaskRoleArn: !GetAtt ECSTaskRole.Arn
       ContainerDefinitions:
         - Name: !Sub ${ProjectName}-container
-          Image:
-            Fn::ImportValue: !Sub ${ProjectName}-ecr-repo-uri
+          Image: !Sub
+            - ${AccountId}.dkr.ecr.${Region}.amazonaws.com/${RepositoryName}:latest
+            - AccountId: !Ref AWS::AccountId
+              Region: !Ref AWS::Region
+              RepositoryName: !Ref ECRRepositoryName
           Essential: true
           PortMappings:
             - ContainerPort: !Ref ContainerPort
@@ -175,7 +178,4 @@ Resources:
           - !Ref ECSCluster
           - !GetAtt ECSService.Name
       ScalableDimension: ecs:service:DesiredCount
-      ScalableTargetAction:
-        MinCapacity: 2
-        MaxCapacity: 6
       ServiceNamespace: ecs
