@@ -347,6 +347,12 @@ Outputs:
     Export:
       Name: !Sub ${ProjectName}-ecs-sg
 
+  ECRRepositoryName:
+    Description: ECR Repository
+    Value: !Ref ECRRepository
+    Export:
+      Name: !Sub ${ProjectName}-repo
+
   ECRRepositoryUri:
     Description: ECR Repository URI
     Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}
