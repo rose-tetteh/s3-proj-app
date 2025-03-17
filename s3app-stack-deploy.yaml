@@ -1,12 +1,3 @@
-template-file-path: s3app-template.yaml
-parameters:
-  PrivateSubnet1CIDR: 10.0.3.0/24
-  PublicSubnet2CIDR: 10.0.2.0/24
-  VpcCIDR: 10.0.0.0/16
-  ECRRepositoryName: s3appl-repo
-  ProjectName: s3appl
-  PrivateSubnet2CIDR: 10.0.4.0/24
-  ContainerPort: '8080'
-  PublicSubnet1CIDR: 10.0.1.0/24
-  S3BucketName: s3appl-images
+template-file-path: s3app-ecstemplate.yaml
+parameters: {}
 tags: {}
