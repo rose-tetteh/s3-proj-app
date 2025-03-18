@@ -3,7 +3,7 @@ Resources:
   - TargetService:
       Type: AWS::ECS::Service
       Properties:
-        TaskDefinition: "arn:aws:ecs:eu-west-1:677276083056:task-definition/s3appl-task:6"
+        TaskDefinition: "arn:aws:ecs:eu-west-1:677276083056:task-definition/s3appl-task1:1"
         LoadBalancerInfo:
           ContainerName: "s3appl-container"
           ContainerPort: 8080
