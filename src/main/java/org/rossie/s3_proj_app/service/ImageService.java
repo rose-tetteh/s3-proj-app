@@ -1,6 +1,7 @@
 package org.rossie.s3_proj_app.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.rossie.s3_proj_app.model.ImageDto;
 import org.rossie.s3_proj_app.utils.S3Config;
 import org.springframework.stereotype.Service;
@@ -15,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ImageService {
@@ -32,7 +34,6 @@ public class ImageService {
         ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
-
         return s3Client.listObjectsV2(listRequest).contents().stream()
                 .map(s3Object -> {
                     // Try to extract title from the key or use a default
