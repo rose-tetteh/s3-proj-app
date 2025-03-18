@@ -28,3 +28,15 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+      - name: Package deployment
+        run: |
+          zip -r deployment.zip appspec.yaml
+          aws s3 cp deployment.zip s3://s3appl-images/deployment.zip
+      - name: Deploy to ECS with CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name s3appl-codedeploy \
+            --deployment-group-name s3appl-deployment-group \
+            --s3-location bucket=s3appl-images,bundleType=zip,key=deployment.zip \
+            --region eu-west-1
