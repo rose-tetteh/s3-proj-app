@@ -64,10 +64,27 @@ Resources:
           Value: !Sub ${ProjectName}-alb
 
   # Target Group
-  TargetGroup:
+  BlueTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: !Sub ${ProjectName}-tg-blue
+      Port: 80
+      Protocol: HTTP
+      TargetType: ip
+      VpcId:
+        Fn::ImportValue: !Sub ${ProjectName}-vpc-id
+      HealthCheckPath: /
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      UnhealthyThresholdCount: 3
+      Matcher:
+        HttpCode: '200-299'
+
+  GreenTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${ProjectName}-tg-green
       Port: 80
       Protocol: HTTP
       TargetType: ip
@@ -87,9 +104,19 @@ Resources:
     Properties:
       DefaultActions:
         - Type: forward
-          TargetGroupArn: !Ref TargetGroup
+          TargetGroupArn: !Ref BlueTargetGroup
       LoadBalancerArn: !Ref ApplicationLoadBalancer
       Port: 80
+      Protocol: HTTP
+
+  ALBTestListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref GreenTargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 8081
       Protocol: HTTP
 
   # CloudWatch Log Group
@@ -159,7 +186,7 @@ Resources:
       DeploymentController:
         Type: CODE_DEPLOY
       LoadBalancers:
-        - TargetGroupArn: !Ref TargetGroup
+        - TargetGroupArn: !Ref BlueTargetGroup
           ContainerName: !Sub ${ProjectName}-container
           ContainerPort: !Ref ContainerPort
       NetworkConfiguration:
