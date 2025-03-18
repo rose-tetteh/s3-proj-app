@@ -21,7 +21,7 @@ RUN echo "[default]" > /root/.aws/credentials \
 
 # Create AWS config file (optional, but prevents the previous error)
 RUN echo "[default]" > /root/.aws/config \
-    && echo "region=us-east-1" >> /root/.aws/config
+    && echo "region=eu-west-1" >> /root/.aws/config
 
 # Ensure correct permissions
 RUN chmod 600 /root/.aws/credentials
